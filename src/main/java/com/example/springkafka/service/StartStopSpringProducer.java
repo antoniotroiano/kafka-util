@@ -10,16 +10,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class SpringKafkaProducerUtil {
+public class StartStopSpringProducer {
 
     private static final Map<String, KafkaTemplate<String, String>> producerMap = new HashMap<>();
 
-    public KafkaTemplate<String, String> startSpringProducer(String topic, ProducerListener<String, String> producerListener, Map<String, Object> producerProperties) {
+    public KafkaTemplate<String, String> startSpringProducer(String topic,
+                                                             ProducerListener<String, String> producerListener,
+                                                             Map<String, Object> producerProperties) {
         log.info("Producer exist or created for topic {} and started", topic);
         return producerMap.computeIfAbsent(topic, t -> createProducer(t, producerListener, producerProperties));
     }
 
-    private KafkaTemplate<String, String> createProducer(String topic, ProducerListener<String, String> producerListener, Map<String, Object> producerProperties) {
+    private KafkaTemplate<String, String> createProducer(String topic,
+                                                         ProducerListener<String, String> producerListener,
+                                                         Map<String, Object> producerProperties) {
         ProducerFactory<String, String> factory = new DefaultKafkaProducerFactory<>(producerProperties);
         KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(factory);
         kafkaTemplate.setDefaultTopic(topic);

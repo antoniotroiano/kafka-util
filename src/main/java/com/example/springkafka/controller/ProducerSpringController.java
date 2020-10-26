@@ -1,6 +1,6 @@
 package com.example.springkafka.controller;
 
-import com.example.springkafka.service.SpringKafkaProducerUtil;
+import com.example.springkafka.service.StartStopSpringProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.ProducerListener;
@@ -17,18 +17,18 @@ import java.util.Map;
 public class ProducerSpringController {
 
     @Autowired
-    private SpringKafkaProducerUtil springKafkaProducerUtil;
+    private StartStopSpringProducer startStopSpringProducer;
 
     @PostMapping("/producerSpring/{topic}/{producerListener}/{producerProperties}")
     public String startProducer(@PathVariable String topic,
                                 @RequestBody ProducerListener<String, String> producerListener, Map<String, Object> producerProperties) {
-        springKafkaProducerUtil.startSpringProducer(topic, producerListener, producerProperties);
+        startStopSpringProducer.startSpringProducer(topic, producerListener, producerProperties);
         return "started producer";
     }
 
     @DeleteMapping("/producerSpring/{topic}")
     public String stop(@PathVariable String topic) {
-        springKafkaProducerUtil.stopSpringProducer(topic);
+        startStopSpringProducer.stopSpringProducer(topic);
         return "stopped producer";
     }
 }

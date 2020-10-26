@@ -1,3 +1,6 @@
+package poisonpill;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +36,7 @@ import java.util.Map;
         partitions = 1,
         topics = {"testTopicEmbeddedKafka"}
 )
-public class SpringKafkaEmbeddedTest {
+public class PoisonPillTest {
 
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
@@ -52,19 +55,46 @@ public class SpringKafkaEmbeddedTest {
             objectNode.put("message", "The index is now: " + index);
             producerJson.send("testTopicEmbeddedKafka", index, objectNode);
         }
-        producerString.send("testTopicEmbeddedKafka", 20, "Wrong message");
 
-        ConsumerRecords<Integer, Object> records = consumer().poll(Duration.ofMillis(10000));
+        producerString.send("testTopicEmbeddedKafka", 20, "{ \"hallo\" : \"Wrong message\" }");
 
-        log.info("Count records: " + records.count());
+        Consumer<Integer, Object> consumer = consumer();
 
-        for (ConsumerRecord<Integer, Object> record : records) {
-            if (record.value() == null) {
-                log.warn("A poison pill record was encountered: " + record);
-            } else {
-                log.info("Topic: " + record.topic() + ", value: " + record.value());
+        for (int i = 1; i < 2; i++) {
+            ConsumerRecords<Integer, Object> records = consumer.poll(Duration.ofMillis(10000));
+            log.info("Count records: " + records.count());
+
+            for (ConsumerRecord<Integer, Object> record : records) {
+                if (record.value() == null) {
+                    log.warn("A poison pill record was encountered: " + record);
+                } else {
+                    log.info("Topic: " + record.topic() + ", value: " + record.value());
+                }
             }
         }
+    }
+
+    private Consumer<Integer, Object> consumer() {
+        //Consumer props
+        Map<String, Object> consumerProps =
+                KafkaTestUtils.consumerProps("testGroup", "false", this.embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, JsonNode.class);
+        consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 5);
+        //Die nächsten zwei Zeilen auskommentieren und den Block einkommentieren behebt das Problem
+        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
+        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        /*consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        consumerProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, IntegerDeserializer.class);
+        consumerProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);*/
+        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+
+        //Create consumer
+        DefaultKafkaConsumerFactory<Integer, Object> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
+        Consumer<Integer, Object> consumer = cf.createConsumer();
+        this.embeddedKafkaBroker.consumeFromAnEmbeddedTopic(consumer, "testTopicEmbeddedKafka");
+        return consumer;
     }
 
     private KafkaTemplate<Integer, Object> producerJson() {
@@ -88,25 +118,5 @@ public class SpringKafkaEmbeddedTest {
         //Create producer
         DefaultKafkaProducerFactory<Integer, Object> pfString = new DefaultKafkaProducerFactory<>(producerPropsString);
         return new KafkaTemplate<>(pfString);
-    }
-
-    private Consumer<Integer, Object> consumer() {
-        //Consumer props
-        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("testGroup", "false", this.embeddedKafkaBroker);
-        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        //Die nächsten zwei Zeilen auskommentieren und den Block einkommentieren behebt das Problem
-        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
-        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        /*consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        consumerProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, IntegerDeserializer.class);
-        consumerProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);*/
-        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-
-        //Create consumer
-        DefaultKafkaConsumerFactory<Integer, Object> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
-        Consumer<Integer, Object> consumer = cf.createConsumer();
-        this.embeddedKafkaBroker.consumeFromAnEmbeddedTopic(consumer, "testTopicEmbeddedKafka");
-        return consumer;
     }
 }

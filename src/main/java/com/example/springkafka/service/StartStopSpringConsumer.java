@@ -1,7 +1,6 @@
 package com.example.springkafka.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
@@ -10,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class SpringKafkaConsumerUtil {
+public class StartStopSpringConsumer {
 
     private static final Map<String, ConcurrentMessageListenerContainer<String, String>> consumerMap = new HashMap<>();
 
@@ -24,12 +23,15 @@ public class SpringKafkaConsumerUtil {
         }
     }
 
-    private ConcurrentMessageListenerContainer<String, String> createContainer(String topic, Object messageListener, Map<String, Object> consumerProperties) {
+    private ConcurrentMessageListenerContainer<String, String> createContainer(String topic,
+                                                                               Object messageListener,
+                                                                               Map<String, Object> consumerProperties) {
         ContainerProperties containerProperties = new ContainerProperties(topic);
-        containerProperties.setPollTimeout(100); //Muss ich das setzen? Oder wird das nicht in den Properties gesetzt?
+        containerProperties.setPollTimeout(100);
 
-        ConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(consumerProperties);
-        ConcurrentMessageListenerContainer<String, String> container = new ConcurrentMessageListenerContainer<>(factory, containerProperties);
+        DefaultKafkaConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(consumerProperties);
+        ConcurrentMessageListenerContainer<String, String> container =
+                new ConcurrentMessageListenerContainer<>(factory, containerProperties);
         container.setupMessageListener(messageListener);
         return container;
     }

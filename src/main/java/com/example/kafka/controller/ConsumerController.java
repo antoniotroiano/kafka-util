@@ -1,6 +1,6 @@
 package com.example.kafka.controller;
 
-import com.example.kafka.service.ConsumerUtil;
+import com.example.kafka.service.StartStopConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,19 +15,19 @@ import java.util.Map;
 @Slf4j
 public class ConsumerController {
 
-    private final ConsumerUtil consumerUtil = new ConsumerUtil();
+    private final StartStopConsumer startStopConsumer = new StartStopConsumer();
 
     @PostMapping("/consumer/{topic}")
     public String startConsumer(@PathVariable String topic,
                                 @RequestBody Map<String, Object> consumerProperties) {
-        consumerUtil.consumerRun(topic, consumerProperties);
+        startStopConsumer.consumerRun(topic, consumerProperties);
         return "started consumer";
     }
 
     @GET
     @Path("/stop")
     public String stopConsumer() {
-        consumerUtil.consumerStop();
+        startStopConsumer.consumerStop();
         log.info("Close consumer");
         return "stopped consumer";
     }
