@@ -14,7 +14,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +24,8 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(SpringRunner.class)
@@ -42,10 +37,10 @@ import java.util.Map;
 )
 public class StartStopConsumerTest {
 
+    private final StartStopConsumer startStopConsumer = new StartStopConsumer();
+
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
-
-    private final StartStopConsumer startStopConsumer = new StartStopConsumer();
 
     @Test
     public void startStopConsumer() throws InterruptedException {
