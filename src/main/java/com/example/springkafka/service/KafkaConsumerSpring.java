@@ -1,4 +1,3 @@
-/*
 package com.example.springkafka.service;
 
 
@@ -17,4 +16,3 @@ public class KafkaConsumerSpring {
         log.info("Received message from Kafka: " + message);
     }
 }
-*/

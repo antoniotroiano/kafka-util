@@ -1,4 +1,3 @@
-/*
 package com.example.springkafka.config;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,4 +42,3 @@ public class KafkaConsumerConfig {
         return config;
     }
 }
-*/
